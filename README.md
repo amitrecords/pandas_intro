@@ -1,3 +1,5 @@
 # Pandas
 
-`Introduction to using pandas for computational chemistry and related.`
+*Introduction to using pandas for computational chemistry and related.*
+
+
