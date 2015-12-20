@@ -13,26 +13,20 @@ except:
     pass
 
 
-splitter = '>='
-pkgs = ['numpy>=1.10.0',
-        'scipy>=0.16',
-        'pandas>=0.17',
-        'tables>=3.2.2',
-        'jupyter>=1.0.0',
-        'notebook>=4.0.6',
-        'ipython>=4.0.0',
-        'matplotlib>=1.5.0',
-        'seaborn>=0.6.0']
+pkgs = ['numpy', 'scipy', 'pandas', 'jupyter',
+        'notebook', 'ipython', 'matplotlib', 'seaborn']
 
 
 def install_pkgs(using='pip'):
     '''
     pip install pkgs
     '''
-    install = 'install' if using == 'pip' else 'install -y'
-    for pkgv in pkgs:
-        pkg, version = pkgv.split(splitter)
-        subprocess.run([using, install, pkg])
+    cmd = [using, 'install']
+    if using == 'pip':
+        cmd += pkgs + ['tables']
+    else:
+        cmd += ['-y'] + pkgs + ['pytables']
+    subprocess.run(cmd)
 
 
 def start_notebook():
@@ -43,11 +37,13 @@ def start_notebook():
 
 
 if __name__ == '__main__':
-    response = input('This script will install some dependencies. Continue [pip/conda] (default: pip): ')
-    if response is None or response == 'pip':
+    response = input('This script will install some dependencies. Continue [pip/conda/anaconda] (default: pip): ')
+    if response is '' or response == 'pip':
         install_pkgs()
     elif response == 'conda':
         install_pkgs('conda')
+    elif response == 'anaconda':
+        install_pkgs('anaconda')
     else:
         raise Exception('Unknown option {0}'.format(response))
     start_notebook()
