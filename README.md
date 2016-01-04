@@ -2,16 +2,17 @@
 
 *Introduction to using pandas for computational chemistry and related applications*
 
-To start the tutorial execute (for convenience)
-```
-python run.py
-```
-or if you already have all of the dependencies installed
+To start the tutorial execute (in this directory):
 ```
 jupyter notebook
 ```
 
-# Requires
+If you do not have all the required packages, please see below or try using:
+```
+python run.py
+```
+
+# Requirements
 
 - numpy
 - scipy
@@ -22,3 +23,9 @@ jupyter notebook
 - ipython
 - matplotlib
 - seaborn
+
+Please install these using your preferred Python package manager. Then run the first command above.
+
+# Other
+
+Having JMol or another xyz file view will be useful.

@@ -58,3 +58,7 @@ target/
 
 # IPython
 .ipynb*
+
+# Misc
+*.hdf*
+pytables*.tmp

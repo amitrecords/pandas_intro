@@ -14,7 +14,8 @@ except:
 
 
 pkgs = ['numpy', 'scipy', 'pandas', 'jupyter',
-        'notebook', 'ipython', 'matplotlib', 'seaborn']
+        'notebook', 'ipython', 'matplotlib', 'seaborn',
+        'numba']
 
 
 def install_pkgs(using='pip'):
