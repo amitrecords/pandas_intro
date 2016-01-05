@@ -19,7 +19,7 @@ def free_boundary_distances(frame):
     return pd.DataFrame.from_dict({'distances': distances, 'symbols': symbols})
 
 
-def unitify(df, a):
+def create_unit(df, a):
     '''
     Put all atoms back into the cubic unit cell.
     '''
@@ -103,7 +103,7 @@ def cubic_periodic_distances(xyz, a, nat, k, min_distance=0.05):
     # Since the unit cell size doesn't change between frames,
     # lets put all of the atoms (in every frame) back in the
     # unit cell at the same time.
-    unit_xyz = unitify(xyz, a)
+    unit_xyz = create_unit(xyz, a)
     # Now we will define another function which will do the
     # steps we outlined above (see below) and apply this
     # function to every frame of the unit_xyz
