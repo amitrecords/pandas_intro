@@ -7,6 +7,8 @@ To start the tutorial execute (in this directory):
 jupyter notebook
 ```
 
+and open the **00_intro** notebook.
+
 If you do not have all the required packages, please see below or try using:
 ```
 python run.py
