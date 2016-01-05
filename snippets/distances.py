@@ -89,3 +89,60 @@ def map_x_to_y_numba(x, y):
     return mapped
 
 
+def cubic_periodic_distances(xyz, a, nat, k, min_distance=0.05):
+    '''
+    Computes atom to atom distances for a periodic cubic cell.
+
+    Args:
+        xyz: Properly indexed pandas DataFrame
+        a: Cubic cell dimension
+
+    Returns:
+        twobody: DataFrame of distances
+    '''
+    # Since the unit cell size doesn't change between frames,
+    # lets put all of the atoms (in every frame) back in the
+    # unit cell at the same time.
+    unit_xyz = unitify(xyz, a)
+    # Now we will define another function which will do the
+    # steps we outlined above (see below) and apply this
+    # function to every frame of the unit_xyz
+    twobody = unit_xyz.groupby(level='frame').apply(_compute, k=k, min_distance=min_distance)
+    # Pair the symbols
+    #twobody.loc[:, 'symbols'] = [''.join(sorted(x)) for x in zip(*(twobody['atom1'].tolist(), twobody['atom2'].tolist()))]
+    # Name the indexes
+    twobody.index.names = ['frame', 'two']
+    return twobody
+
+
+# Leading underscore to emphasize that this function
+# should not be called directly
+def _compute(unit_frame, k, min_distance, max_distance=25.0):
+    '''
+    Compute periodic atom to atom distances
+    '''
+    # Generate superframe
+    values = unit_frame.loc[:, ['x', 'y', 'z']].values
+    big_frame = superframe_numba(values, a)
+
+    # Create the K-D tree
+    kd = cKDTree(big_frame)
+    distances, indexes = kd.query(values, k=k)
+
+    # Metadata
+    unit_frame_indexes = np.tile(unit_frame.index.get_level_values('atom').values, (len(values), 27)).flatten()
+    symbol_dict = unit_frame.reset_index('frame', drop=True).loc[:, 'symbol'].to_dict()
+    repeated_source = np.repeat(indexes[:, 0], k)
+    def symbol_caller(symbol):
+        return symbol_dict[symbol]
+
+    # Mapping of atom indexes to symbols
+    atom1_indexes = map_x_to_y_numba(repeated_source, unit_frame_indexes)
+    atom2_indexes = map_x_to_y_numba(indexes.flatten(), unit_frame_indexes)
+    atom1_symbols = list(map(symbol_caller, atom1_indexes))
+    atom2_symbols = list(map(symbol_caller, atom2_indexes))
+
+    # Generation of the DataFrame
+    frame_twobody = pd.DataFrame.from_dict({'distance': distances.flatten(), 'atom1': atom1_symbols, 'atom2': atom2_symbols})
+    frame_twobody = frame_twobody.loc[frame_twobody['distance'] > min_distance]
+    return frame_twobody

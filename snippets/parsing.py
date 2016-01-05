@@ -40,9 +40,7 @@ def pandas_xyz_parser(path):
         df (:class:`pandas.DataFrame`): Table of XYZ data
     '''
     df = pd.read_csv(path, delim_whitespace=True, names=['symbol', 'x', 'y', 'z'])    # Read data from disk
-    indexes_to_discard = df.loc[df['symbol'].str.isdigit(), 'symbol'].index           # Get indexes of nat lines
-    indexes_to_discard = indexes_to_discard.append(indexes_to_discard + 1)            # and comment lines
-    df = df.loc[~df.index.isin(indexes_to_discard)].reset_index(drop=True)            # Discard them
+    df.dropna(inplace=True)                                                           # Drop nat line
     df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float)                        # Convert types
     return df
 
