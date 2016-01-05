@@ -31,3 +31,5 @@ Please install these using your preferred Python package manager. Then run the f
 # Other
 
 Having JMol or another xyz file view will be useful.
+
+4+ GB of RAM is recommended.
