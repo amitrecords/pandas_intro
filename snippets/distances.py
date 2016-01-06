@@ -146,7 +146,7 @@ def cubic_periodic_distances(xyz, a, nat, k=None):
     # function to every frame of the unit_xyz
     twobody = unit_xyz.groupby(level='frame').apply(_compute, k=k)    # <== This is the meat and potatoes
     # Filter the meaningful distances
-    twobody = twobody.loc[(twobody.distance > 0.3) & (twobody.distance < 1.5 * a)]
+    twobody = twobody.loc[(twobody.distance > 0.3) & (twobody.distance < 8.3)]
     # Pair the symbols
     twobody.loc[:, 'symbols'] = twobody['atom1'] + twobody['atom2']
     # Name the indices
