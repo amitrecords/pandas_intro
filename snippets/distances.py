@@ -49,7 +49,7 @@ def superframe(frame, a):
     return coords
 
 
-@jit(nopython=True)
+@jit(nopython=True, cache=True)
 def superframe_numba(unit, a):
     v = [-1, 0, 1]
     n = len(unit)
@@ -77,7 +77,7 @@ def map_x_to_y(x, y):
     return mapped
 
 
-@jit(nopython=True)
+@jit(nopython=True, cache=True)
 def map_x_to_y_numba(x, y):
     '''
     Using the indexes in x, generate an array of the same
@@ -89,7 +89,43 @@ def map_x_to_y_numba(x, y):
     return mapped
 
 
-def cubic_periodic_distances(xyz, a, nat, k, min_distance=0.05):
+def custom_pdist(origxyz, superxyz):
+    n1 = len(origxyz)
+    n2 = len(superxyz)
+    distances = np.empty((n1 * n2, ))
+    index1 = np.empty((n1 * n2), dtype='i8')
+    index2 = np.copy(index1)
+    h = 0
+    for i, cen in enumerate(central):
+        for j, b in enumerate(big):
+            distances[h] = np.sum((cen - b)**2)**0.5    # Numpy broadcasting
+            index1[h] = i
+            index2[h] = j
+            h += 1
+    return distances, index1, index2
+
+
+@jit(nopython=True, cache=True)
+def custom_pdist_numba(origxyz, superxyz):
+    n = len(origxyz)
+    nn = len(superxyz)
+    distances = np.empty((n * nn, ), dtype=float64)
+    index1 = np.empty((n * nn, ), dtype=int64)
+    index2 = np.empty((n * nn, ), dtype=int64)
+    h = 0
+    for i in range(n):
+        for j in range(nn):
+            csum = 0.0
+            for k, c in enumerate(origxyz[i]):
+                csum += (c - superxyz[j][k])**2
+            distances[h] = csum**0.5
+            index1[h] = i
+            index2[h] = j
+            h += 1
+    return distances, index1, index2
+
+
+def cubic_periodic_distances(xyz, a, nat, k=None):
     '''
     Computes atom to atom distances for a periodic cubic cell.
 
@@ -100,24 +136,25 @@ def cubic_periodic_distances(xyz, a, nat, k, min_distance=0.05):
     Returns:
         twobody: DataFrame of distances
     '''
+    k = nat - 1 if k is None else k
     # Since the unit cell size doesn't change between frames,
-    # lets put all of the atoms (in every frame) back in the
+    # let's put all of the atoms (in every frame) back in the
     # unit cell at the same time.
     unit_xyz = create_unit(xyz, a)
     # Now we will define another function which will do the
     # steps we outlined above (see below) and apply this
     # function to every frame of the unit_xyz
-    twobody = unit_xyz.groupby(level='frame').apply(_compute, k=k, min_distance=min_distance)
+    twobody = unit_xyz.groupby(level='frame').apply(_compute, k=k)    # <== This is the meat and potatoes
+    # Filter the meaningful distances
+    twobody = twobody.loc[(twobody.distance > 0.3) & (twobody.distance < 1.5 * a)]
     # Pair the symbols
-    #twobody.loc[:, 'symbols'] = [''.join(sorted(x)) for x in zip(*(twobody['atom1'].tolist(), twobody['atom2'].tolist()))]
-    # Name the indexes
+    twobody.loc[:, 'symbols'] = twobody['atom1'] + twobody['atom2']
+    # Name the indices
     twobody.index.names = ['frame', 'two']
     return twobody
 
 
-# Leading underscore to emphasize that this function
-# should not be called directly
-def _compute(unit_frame, k, min_distance, max_distance=25.0):
+def _compute(unit_frame, k):
     '''
     Compute periodic atom to atom distances
     '''
@@ -144,5 +181,4 @@ def _compute(unit_frame, k, min_distance, max_distance=25.0):
 
     # Generation of the DataFrame
     frame_twobody = pd.DataFrame.from_dict({'distance': distances.flatten(), 'atom1': atom1_symbols, 'atom2': atom2_symbols})
-    frame_twobody = frame_twobody.loc[frame_twobody['distance'] > min_distance]
     return frame_twobody

@@ -3,7 +3,7 @@ import numpy as np
 from scipy.integrate import cumtrapz
 
 
-def pcf(A, B, a, twobody, dr=0.01, start=0.5, end=7.5):
+def pcf(A, B, a, twobody, dr=0.05, start=0.5, end=7.5):
     '''
     Pair correlation function between two atom types.
     '''
